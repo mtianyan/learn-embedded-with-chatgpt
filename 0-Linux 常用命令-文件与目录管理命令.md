@@ -318,7 +318,3 @@ ls -l /path/to/your/dir
 
 如果你有任何输出不对，或者你用的是非 Debian 系（如 RedHat），`nogroup` 可能会叫做 `nobody`，可以用 `cat /etc/group | grep nobody` 看系统支持的用户组。
 
----
-
-要不要现在进入下一章节 —— 🧑‍💻 用户管理命令？还是我先帮你整理到 markdown 文件方便你传到仓库？
-
