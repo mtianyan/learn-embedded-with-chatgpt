@@ -404,6 +404,181 @@ SIMD，即 single instruction multiple data，单指令流多数据流，也就�
 
 ARMv7之后，将SIMD升级为 NEON技术 相当于**扩展了浮点运算向量表**有一个VFS的二维向量表，将数据存放到这个表中，cpu可以一次性取某个区域进行执行，**NEON就是SIMD的升级 相当于将上面SIMD执行指令的表格长度与宽度进行扩展，提升了数据集的压缩算法**。 NENO可以进行指令扩展来实现相关功能，但我们一般不使用，如果做一些GPU相关的工作就需要利用NENO的浮点运算特性。 可用于加速多媒体和信号处理算法(如视频编码/解码)、2D/3D图形、游戏、音频和语音处理、图像处理技术、电话和声音合成，其性能至少为ARMv5的3倍，为ARMV6 SIMD性能的两倍 在SIMD的基础上提升了两倍效率 所以运算速度的加快不是单纯的提升CPU的频率 通过这两个技术提升指令执行的方式，还有其他的方法(比如增加二级缓存)
 
+# ARM核(ARMv7)工作模式
+
+![](http://cdn.pic.funpython.cn/image/202507272304662.png)
+
+人的角色，工程师，病人，
+
+正打游戏需要去接电话，产生中断，切换工作模式
+
+异常情况很多，正常情况只有user/system两种
+
+安全/非安全，有些模式，只能在安全状态下
+
+状态位代表这个模式。 
+
+工作模式可以软件切换，也可以异常切换
+
+## 1.Privilege level(权限级别)
+
+![](http://cdn.pic.funpython.cn/image/202507272309353.png)
+
+安全状态 pl0 pl1
+
+非安全状态 pl0 pl1 pl2
+
+虚拟化扩展，虚拟机里运行操作系统
+
+hyp 为虚拟化设计的
+
+user 为非特权级别
+
+## 2. ARM processor modes
+
+![](http://cdn.pic.funpython.cn/image/202507272311837.png)
+
+### (1)User mode
+
+**An operating system runs applications in User mode to restrict the use of systemresources. **Software executing in User mode executes at pLp. Execution in User mode issometimes described as unprivileged execution.
+操作系统在用户模式下运行应用程序以限制系统资源的使用。在用户模式下执行的软件在PL0执行。
+在用户模式下执行有时被描述为非特权执行。
+Application programs normally execute in User mode, and any program executed in User mode:
+Makes only unprivileged accesses to system resources, meaning it cannot access protected
+system resources.
+Makes only unprivileged access to memory.
+**Cannot change mode except by causing an exception,**
+
+应用程序通常在用户模式下执行，而在用户模式下执行的任何程序:
+
+- 仅对系统资源进行非特权访问，这意味着它无法访问受保护的系统资源。
+- 仅对内存进行非特权访问
+- 除非引起异常，否则无法更改模式，
+
+
+用户模式是用户程序的工作模式，它运行在操作系统的用户态，它没有权限去操作其它硬件资源，**只能执行处理自己的数据，也不能切换到其它模式下，要想访问硬件资源或切换到其它模式只能通过软中断或产生异常。**
+
+### (2)system mode
+
+![](http://cdn.pic.funpython.cn/image/202507272313166.png)
+
+系统模式是特权模式，不受用户模式的限制。用户模式和系统模式共用一套寄存器，操作系统在该模式下可以方便的访问用户模式的寄存器，而且操作系统的一些特权任务可以使用这个模式访问一些受控的资源。
+
+
+### (3)Supervisor mode
+
+Supervisor mode is the default mode to which a Supervisor Call exception is taken. **Executing aSVC (Supervisor Call) instruction generates a Supervisor Call exception, that is takento Supervisor mode.** A processor enters Supervisor mode on Reset.
+
+
+Supervisor模式是采取Supervisor Call异常的默认模式。执行SVC(Supervisor Call) 指令会生成Supervisor Call异常，该异常被带到Supervisor模式。处理器在复位时进入Supervisor模式。
+
+管理模式是CPU上电后默认模式，因此在该模式下主要用来做系统的初始化，软中断处理也在该模式下。当用户模式下的用户程序请求使用硬件资源时，通过软件中断进入该模式。
+
+### (4)Abort mode
+
+Abort mode is the default mode to which a Data Abort exception or Prefetch Abort exception istaken.
+
+中止模式是数据中止异常或预取中止异常的默认模式采取。
+
+中止模式用于支持虚拟内存或存储器保护，**当用户程序访问非法地址，没有权限读取的内存地址时，会进入该模式**，linux下编程时经常出现的segment fault通常都是在该模式下抛出返回的。
+
+### (5)Undefined mode
+
+Undefined mode is the default moderto which an instruction-related exception, including anyattempt to execute an UNDEFINED instruction, is taken.
+
+未定义模式是与指令相关的异常(包括任何执行未定义指令的尝试)采取的默认模式。
+
+### (6)FIQ mode
+
+FIQ mode is the default mode to which an FIQ interrupt is taken.
+
+FIQ模式是采用FIQ中断的默认模式。
+
+快速中断模式是相对一般中断模式而言的，它是用来处理对**时间要求比较紧急的中断请求主要用于高連数据传输及通道处理中**。
+
+### (7)IRq mode
+
+IRQ mode is the default mode to which an IRQ interrupt is taken.
+
+IRQ模式是采用IRQ中断的默认模式。
+
+一般中断模式也叫普通中断模式，用于处理一般的中断请求，通常在硬件产生中断信号之后自动进入该模式，该模式为特权模式，可以自由访问系统硬件资源。
+
+
+### (8)Hyp mode
+
+Hyp mode is the Non-secure PL2Imode, implemented as part of the Virtualization Extensions. Hypmode is entered on taking an exception from Non-secure state that must be taken to PL2
+
+Hyp模式是作为虚拟化扩展的一部分实现的非安全PL2模式。Hyp模式在从非安全状态获取必须带到PL2的异常时进入
+
+The Hypervisor Call exception and Hyp Trap exception are exceptions that are implemented aspart of the Virtualization Extensions, and that are always taken in Hyp mode.
+
+Hypervisor Call异常和Hyp Trap异常是作为虚拟化扩展的一部分实现的异常，并且始终在Hyp模式下执行。
+
+In a Non-secure PL1 mode, executing a HVC (Hypervisor Call) instruction generates a HypervisorCall exception.
+
+在非安全PL1模式下，执行HVC(Hypervisor Call)指令会生成Hypervisor Call异常。
+
+必须是非安全 + pl1
+
+### (9)Monitor mode
+
+Monitor mode is the mode to which a Secure Monitor Call exception is taken. In a PL1 mode,executing an SMC_(Secure Monitor Call) instruction generates a Secure Monitor Call exception.监视器
+
+模式是采用安全监视器调用异常的模式。在PL1模式下，执行SMC(安全监视器调用)指令会生成安全监视器调用异常。
+
+Monitor mode is a Secure mode, meaning it is always in the Secure state, regardless of the valueof the SCR(secure config register).NS bit. Software running in Monitor mode has access to boththe Secure and Non-secure copies of system registers. This means Monitor mode provides thenormal method of changing between the Secure and Non-secure security states.
+
+监视器模式是一种安全模式，这意味着无论SCR.NS位的值如何，它都始终处于安全状态。在监视器模式下运行的软件可以访问系统寄存
+器的安全和非安全副本。这意味着监视器模式提供了在安全和非安全安全状态之间更改的正常方法。
+
+## ARM核(ARMv7) 的寄存器资源
+
+![](http://cdn.pic.funpython.cn/image/202507272324504.png)
+
+r0-r7 可以共享，切换模式还会在
+
+FIQ 为啥快就是因为他拥有更多的寄存器资源
+
+异常都有 SP LR
+
+PC 也是所有寄存器共享，指令地址写在pc寄存器
+
+CPSR 当前cpu 状态
+
+SPSR 是为了保存CPSR
+
+## 1.寄存器用途分析
+
+RO-R10 用来存放用户的数据
+
+R11(fp:frame-pointer)用来记录一个栈空间的开始地址
+
+R12(ip: The Intra-Procedure-call scratch register) 用来临时存储sp
+
+R13(sp:stack pointer) 栈指针寄存器 局部变量加栈
+
+R14(lr:link register)在发生跳转的时候，用来保存PC寄存器的值 -> a函数调到b函数，跳之前要放到lr. 异常发生也是
+
+R15(pc:program counter)用来存放CPU需要执行的指令所在内存的地址->取第二条
+
+电话处理完，pc 要恢复 lr。
+
+
+## 2.CPSR(Current Program Status Register)
+
+![](http://cdn.pic.funpython.cn/image/202507272331574.png)
+
+mode就是工作模式
+
+![](http://cdn.pic.funpython.cn/image/202507272332463.png)
+
+## 3.SPSR(Saved Program Status Register)
+
+异常产生的时候，用来保存CPSR的值
+
+每种模式都有自己的栈，会到自己的状态
+
 
 
 
