@@ -579,7 +579,135 @@ mode就是工作模式
 
 每种模式都有自己的栈，会到自己的状态
 
+# 4-ARM指令开发环境搭建
 
+## 1-1Keil工程创建
+
+![](http://cdn.pic.funpython.cn/image/202507282127804.png)
+
+![](http://cdn.pic.funpython.cn/image/202507282132082.png)
+
+
+```
+.global _start
+
+_start:
+  mov r0,#10
+  mov r1,#20
+  mov r2,#30
+
+stop:
+	b stop
+```
+
+编译失败
+
+```
+Build started: Project: keil
+*** Target 'Target_1' uses ARM-Compiler 'Default Compiler Version 5' which is not available.
+*** Please review the installed ARM Compiler Versions:
+   'Manage Project Items - Folders/Extensions' to manage ARM Compiler Versions.
+   'Options for Target - Target' to select an ARM Compiler Version for the target.
+*** Build aborted.
+Build Time Elapsed:  00:00:07
+```
+
+![](http://cdn.pic.funpython.cn/image/202507282136139.png)
+
+
+![](http://cdn.pic.funpython.cn/image/202507282136894.png)
+
+语法格式
+
+## 3.ARM指令集
+
+ARM编译器介绍
+
+![](http://cdn.pic.funpython.cn/image/202507282138624.png)
+
+
+交叉编译工具链的命名规则为: `arch [-vendor][-os][-(gnu)eabi]`
+
+- arch-体系架构，如ARM,MIPS等
+- vendor -工具链提供商
+- os-目标操作系统
+- eabi-嵌入式应用二进制接口(Embedded Application Binary Interface)
+
+交叉编译:在PC机上完成代码的编写与编译，在开发板上完成代码的运行
+
+Embedded Application Binary Interface:嵌入式应用二进制接口指定了文件格式、数据类型、使用、堆积组织优化和在一个嵌入式软件中的参数的标准约定
+
+根据对操作系统的支持与否，ARM GCC可分为支持和不支持操作系统，如arm-none-eabi:这个是没有操作系统的，自然不可能支持那些跟操作系统关系密切的函数，比如fork(2),它使用的是newlib这个专用于嵌入式系统的C库。 arm-none-linux-eabi:用于Linux的，使用Glibc
+
+### 1、arm-none-eabi-gcc
+
+Arm官方用于编译 ARM 架构的祼机系统(包括 ARM Linux 的 boot、kernel，不适用编译 Linux应用)，一般适合 ARM7、Cortex-M 和 Cortex-R 内核的芯片使用，所以不支持那些跟操作系统关系密切的函数，比如fork(2)，**他使用的是 newlib 这个专用于嵌入式系统的C库**。下载地址:https://developer.arm.com/downloads/-/gnu-rm
+
+glibc 功能更强大，newlib针对嵌入式做了优化
+
+![](http://cdn.pic.funpython.cn/image/202507282144772.png)
+
+下载 gcc-arm-none-eabi-10.3-2021.10-win32.exe
+
+### 2. arm-none-linux-gnueabi-gcc
+
+主要用于基于ARM架构的Linux系统，可用于编译 ARM 架构的 u-boot、Linux内核、Linux应用等**使用Glibc库**，经过 Codesourcery 公司优化过推出的编译器。arm-none-linux-gnueabi基于GCC，arm-none-linux-gnueabi-xxx 交叉编译工具的浮点运算非常优秀。一般ARM9、ARM11、Cortex-A 内核，带有 Linux 操作系统的会用到。
+
+### 3、arm-eabi-gcc
+
+Android ARM 编译器,
+
+### 4、armcc
+
+ARM 公司推出的编译工具，功能和 arm-none-eabi 类似，可以编译裸机程序(u-boot、kernel)，但是不能编译 Linux 应用程序。armcc-般和ARM一起，KeiI MDK、ADS、RVDS和DS-5中的编译器都是armcc，所以 armcc 编译器都是收费的
+
+支持的版本是v6的
+
+### aarch64-linux-gnu-gcc
+
+aarch64-linux-gnu-gcc是由 Linaro 公司基于 GCC 推出的的 ARM 交叉编译工具。可用于交叉编译**ARMv8 64** 位目标中的裸机程序、u-boot、Linux kernel、filesystem 和 App 应用程序。aarch64-linux-gnu-gcc **交叉编译器必须安装在 64 位主机上**，才能编译目标代码。
+
+## 指定编译器
+
+![](http://cdn.pic.funpython.cn/image/202507282156771.png)
+
+![](http://cdn.pic.funpython.cn/image/202507282158976.png)
+
+![](http://cdn.pic.funpython.cn/image/202507282159624.png)
+
+目录下要有上图所示文件
+
+## 开始反侦
+
+![](http://cdn.pic.funpython.cn/image/202507282159635.png)
+
+![](http://cdn.pic.funpython.cn/image/202507282201189.png)
+
+勾上这两个红色按钮
+
+![](http://cdn.pic.funpython.cn/image/202507282202403.png)
+
+设置完之后要再次点击编译
+
+![](http://cdn.pic.funpython.cn/image/202507282203682.png)
+
+如果有两个箭头说明debug成功
+
+![](http://cdn.pic.funpython.cn/image/202507282204374.png)
+
+
+![](http://cdn.pic.funpython.cn/image/202507282205600.png)
+
+是16进制的
+
+```
+stop:
+	b stop
+```
+
+相当于死循环
+
+# 5-ARM数据传送及运算指令
 
 
 
